@@ -85,6 +85,8 @@ public:
 
     void execute(EvalState &state, Program &Program);
 
+    bool isVarName(std::string var_name);
+
 };
 
 class PRINT: public Statement {
