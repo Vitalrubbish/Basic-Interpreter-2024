@@ -144,7 +144,8 @@ public:
     //todo
 
 private:
-
+    std::map<int, std::string> sentence;
+    std::set<int> line_number;
     // Fill this in with whatever types and instance variables you need
     //todo
 };
