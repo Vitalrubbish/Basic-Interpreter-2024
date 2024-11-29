@@ -1,221 +1,232 @@
 /*
- * File: Basic.cpp
- * ---------------
- * This file is the starter project for the BASIC interpreter.
+ * File: statement.cpp
+ * -------------------
+ * This file implements the constructor and destructor for
+ * the Statement class itself.  Your implementation must do
+ * the same for the subclasses you define for each of the
+ * BASIC statements.
  */
 
-#include <cctype>
-#include <iostream>
-#include <string>
-#include "exp.hpp"
-#include "parser.hpp"
-#include "program.hpp"
-#include "Utils/error.hpp"
-#include "Utils/tokenScanner.hpp"
-#include "Utils/strlib.hpp"
+#include "statement.hpp"
 
 
-/* Function prototypes */
+/* Implementation of the Statement class */
 
-void processLine(std::string line, Program &program, EvalState &state);
+int stringToInt(std::string str);
 
-/* Main program */
+Statement::Statement() = default;
 
-int main() {
-    EvalState state;
-    Program program;
-    //cout << "Stub implementation of BASIC" << endl;
-    while (true) {
-        try {
-            std::string input;
-            getline(std::cin, input);
-            if (input.empty())
-                continue;
-            processLine(input, program, state);
-        } catch (ErrorException &ex) {
-            std::cout << ex.getMessage() << std::endl;
-        }
-    }
-    return 0;
+Statement::~Statement() = default;
+
+LET::LET(std::string current_line) {
+    this -> current_line = current_line;
 }
 
-/*
- * Function: processLine
- * Usage: processLine(line, program, state);
- * -----------------------------------------
- * Processes a single line entered by the user.  In this version of
- * implementation, the program reads a line, parses it as an expression,
- * and then prints the result.  In your implementation, you will
- * need to replace this method with one that can respond correctly
- * when the user enters a program line (which begins with a number)
- * or one of the BASIC commands, such as LIST or RUN.
- */
+LET::~LET(){}
 
-std::string standardize(std::string original_line) {
-    int p = 0;
-    while (original_line[p] >= '0' && original_line[p] <= '9') {
-        p++;
-    }
-    while (original_line[p] == ' ') {
-        p++;
-    }
-    while (original_line[p] != ' ') {
-        p++;
-    }
-    p++;
-    int cur = p;
-    while (p < original_line.length()) {
-        if (original_line[p] != ' ') {
-            original_line[cur] = original_line[p];
-            cur++;
-        }
-        p++;
-    }
-    return original_line.substr(0, cur);
-}
-
-std::string standardize_if(std::string original_line) {
-    int p = 1;
-    while (original_line.substr(p - 1,2) != "IF") {
-        p++;
-    }
-    p++;
-    while (original_line[p] == ' ') {
-        p++;
-    }
-    int cur = p;
-    while (original_line.substr(p,2) != " =" && original_line.substr(p,2) != " <" && original_line.substr(p,2) != " >") {
-        if (original_line[p] != ' ') {
-            original_line[cur] = original_line[p];
-            cur++;
-        }
-        p++;
-    }
-
-    original_line[cur++] = original_line[p++];
-    original_line[cur++] = original_line[p++];
-
-    while (original_line[p] == ' ') {
-        p++;
-    }
-    original_line[cur++] = ' ';
-
-    while (original_line.substr(p,5) != " THEN") {
-        if (original_line[p] != ' ') {
-            original_line[cur] = original_line[p];
-            cur++;
-        }
-        p++;
-    }
-
-    while (p < original_line.size()) {
-        original_line[cur++] = original_line[p++];
-    }
-
-    return original_line.substr(0, cur);
-}
-
-void processLine(std::string line, Program &program, EvalState &state) {
-    TokenScanner scanner;
-    scanner.ignoreWhitespace();
-    scanner.scanNumbers();
-    scanner.setInput(line);
-    std::string token;
-    TokenType type;
-
-    token = scanner.nextToken();
-    type = scanner.getTokenType(token);
-    if (type == WORD) {
-        if (token == "PRINT") {
-            std::string tmp_line = standardize(line);
-            line = tmp_line;
-            PRINT(line).execute(state, program);
-        }
-        if (token == "LET") {
-            std::string tmp_line = standardize(line);
-            line = tmp_line;
-            LET(line).execute(state, program);
-        }
-        if (token == "INPUT") {
-            INPUT(line).execute(state, program);
-        }
-        if (token == "QUIT") {
-            exit(0);
-        }
-        if (token == "CLEAR") {
-            program.clear();
-            state.Clear();
-        }
-        if (token == "LIST") {
-            int line_number = program.getFirstLineNumber();
-            while (line_number != -1) {
-                std::cout << program.getSourceLine(line_number) << '\n';
-                line_number = program.getNextLineNumber(line_number);
-            }
-        }
-        if (token == "RUN") {
-            int line_number = program.getFirstLineNumber();
-            while(true) {
-                if (line_number == -1) {
-                    break;
-                }
-                std::string cur_line = program.getSourceLine(line_number);
-                scanner.setInput(cur_line);
-                token = scanner.nextToken();
-                while (scanner.getTokenType(token) != WORD) {
-                    token = scanner.nextToken();
-                }
-                if (token == "REM") {
-                    line_number = program.getNextLineNumber(line_number);
-                }
-                if (token == "END") {
-                    break;
-                }
-                if (token == "PRINT") {
-                    PRINT exe = cur_line;
-                    exe.execute(state, program);
-                    line_number = program.getNextLineNumber(line_number);
-                }
-                if (token == "LET") {
-                    LET exe = cur_line;
-                    exe.execute(state, program);
-                    line_number = program.getNextLineNumber(line_number);
-                }
-                if (token == "INPUT") {
-                    INPUT exe = cur_line;
-                    exe.execute(state, program);
-                    line_number = program.getNextLineNumber(line_number);
-                }
-                if (token == "IF") {
-                    IF exe = cur_line;
-                    exe.execute(state, program);
-                    line_number = exe.next_line_number;
-                }
-                if (token == "GOTO") {
-                    GOTO exe = cur_line;
-                    exe.execute(state, program);
-                    line_number = exe.next_line_number;
-                }
-            }
-        }
-    }
-    else if (type == NUMBER) {
-        int line_id = std::stoi(token);
+void LET::execute(EvalState &state, Program &program) {
+    scanner.setInput(current_line);
+    std::string token = scanner.nextToken();
+    while (token != "LET") {
         token = scanner.nextToken();
-        if (token == "PRINT") {
-            std::string tmp_line = standardize(line);
-            line = tmp_line;
-        }
-        if (token == "LET") {
-            std::string tmp_line = standardize(line);
-            line = tmp_line;
-        }
-        if (token == "IF") {
-            std::string tmp_line = standardize_if(line);
-            line = tmp_line;
-        }
-        program.addSourceLine(line_id, line);
     }
+    token = scanner.nextToken();
+    std::string var = scanner.nextToken();
+    if (!isVarName(var)) {
+        error("SYNTAX ERROR");
+    }
+    token = scanner.nextToken();
+    token = scanner.nextToken();
+    token = scanner.nextToken();
+    Expression* exp;
+    int val;
+    try {
+        exp = parseExp(scanner);
+        val = exp -> eval(state);
+        state.setValue(var, val);
+        delete exp;
+    } catch (ErrorException &ex) {
+        std::cout << ex.getMessage() << std::endl;
+        delete exp;
+    }
+}
+
+bool LET::isVarName(std::string var_name) {
+    std::string forbid_var_name[] = {"REM", "LET", "PRINT", "INPUT", "END", "GOTO", "IF",
+"THEN", "RUN", "LIST", "CLEAR", "QUIT", "HELP"};
+    for (int i = 0; i < 13; i++) {
+        if (var_name == forbid_var_name[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+PRINT::PRINT(std::string current_line) {
+    this -> current_line = current_line;
+}
+
+PRINT::~PRINT(){}
+
+void PRINT::execute(EvalState &state, Program &program) {
+    scanner.setInput(current_line);
+    std::string token = scanner.nextToken();
+    while (token != "PRINT") {
+        token = scanner.nextToken();
+    }
+    token = scanner.nextToken();
+    int val;
+    Expression* exp;
+    try {
+        exp = parseExp(scanner);
+        val = exp -> eval(state);
+        std::cout << val << '\n';
+        delete exp;
+    } catch (ErrorException &ex) {
+        std::cout << ex.getMessage() << std::endl;
+        delete exp;
+    }
+}
+
+INPUT::INPUT(std::string current_line) {
+    this -> current_line = current_line;
+}
+
+INPUT::~INPUT(){}
+
+void INPUT::execute(EvalState &state, Program &program) {
+    scanner.setInput(current_line);
+    std::string token = scanner.nextToken();
+    while (token != "INPUT") {
+        token = scanner.nextToken();
+    }
+    token = scanner.nextToken();
+    token = scanner.nextToken();
+    std::string input;
+    while(true) {
+        std::cout << " ? ";
+        std::getline(std::cin, input);
+        bool flag = true;
+        if (!(input[0] >= '0' && input[0] <= '9' || input[0] == '-' && input.size() > 1)) {
+            flag = false;
+        }
+        for (int i = 1; i < input.size(); i++) {
+            if (!(input[i] >= '0' && input[i] <= '9')) {
+                flag = false;
+            }
+        }
+        if (flag) {
+            state.setValue(token,std::stoi(input));
+            break;
+        }
+        std::cout << "INVALID NUMBER\n";
+    }
+}
+
+IF::IF(std::string current_line) {
+    this -> current_line = current_line;
+    next_line_number = -1;
+}
+
+IF::~IF(){}
+
+void IF::execute(EvalState &state, Program &program) {
+    scanner.setInput(current_line);
+    std::string token = scanner.nextToken();
+    while(scanner.getTokenType(token) != NUMBER) {
+        token = scanner.nextToken();
+    }
+    current_line_number = std::stoi(token);
+    while (token != "IF") {
+        token = scanner.nextToken();
+    }
+    token = scanner.nextToken();
+    int start_lhs = scanner.getPosition();
+    token = scanner.nextToken();
+    while (token != " ") {
+        token = scanner.nextToken();
+    }
+    int end_lhs = scanner.getPosition() - 1;
+    std::string op = scanner.nextToken();
+    token = scanner.nextToken();
+    int start_rhs = scanner.getPosition();
+    token = scanner.nextToken();
+    while (token != " ") {
+        token = scanner.nextToken();
+    }
+    int end_rhs = scanner.getPosition() - 1;
+    int lhs = calculate(state,current_line.substr(start_lhs, end_lhs - start_lhs));
+    int rhs = calculate(state,current_line.substr(start_rhs, end_rhs - start_rhs));
+
+    bool flag = false;
+    if (op == "=") {
+        if (lhs == rhs) {
+            flag = true;
+        }
+    }
+    if (op == "<") {
+        if (lhs < rhs) {
+            flag = true;
+        }
+    }
+    if (op == ">") {
+        if (lhs > rhs) {
+            flag = true;
+        }
+    }
+
+    if (flag) {
+        while(token != "THEN") {
+            token = scanner.nextToken();
+        }
+        token = scanner.nextToken();
+        token = scanner.nextToken();
+        if (program.find_line_number(std::stoi(token))) {
+            next_line_number = std::stoi(token);
+            return;
+        }
+        error("LINE NUMBER ERROR");
+    }
+    next_line_number = program.getNextLineNumber(current_line_number);
     //todo
 }
 
+int IF::calculate(EvalState &state,std::string expr) {
+    TokenScanner cal;
+    cal.setInput(expr);
+    Expression* exp;
+    int val;
+    try {
+        exp = parseExp(cal);
+        val = exp -> eval(state);
+        delete exp;
+    } catch (ErrorException &ex) {
+        std::cout << ex.getMessage() << std::endl;
+        delete exp;
+    }
+    return val;
+}
+
+GOTO::GOTO(std::string current_line) {
+    this -> current_line = current_line;
+}
+
+GOTO::~GOTO(){}
+
+void GOTO::execute(EvalState &state, Program &program) {
+    scanner.setInput(current_line);
+    std::string token = scanner.nextToken();
+    current_line_number = std::stoi(token);
+    token = scanner.nextToken();
+    while(scanner.getTokenType(token) != NUMBER) {
+        token = scanner.nextToken();
+    }
+    if (program.find_line_number(std::stoi(token))) {
+        next_line_number = std::stoi(token);
+    }
+    else {
+        error("LINE NUMBER ERROR");
+    }
+}
+
+//todo
