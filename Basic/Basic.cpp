@@ -150,7 +150,7 @@ void processLine(std::string line, Program &program, EvalState &state) {
             int line_number = program.getFirstLineNumber();
             while (line_number != -1) {
                 std::cout << program.getSourceLine(line_number) << '\n';
-                line_number = program.getFirstLineNumber();
+                line_number = program.getNextLineNumber(line_number);
             }
         }
         if (token == "RUN") {
