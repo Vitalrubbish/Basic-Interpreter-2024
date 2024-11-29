@@ -140,6 +140,7 @@ public:
 
     int getNextLineNumber(int lineNumber);
 
+    bool find_line_number(int number);
     //more func to add
     //todo
 
