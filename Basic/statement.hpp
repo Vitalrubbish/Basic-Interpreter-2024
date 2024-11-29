@@ -71,9 +71,65 @@ public:
 
     virtual void execute(EvalState &state, Program &program) = 0;
 
+    int current_line_number;
+    std::string current_line;
+    TokenScanner scanner;
 };
 
+class LET: public Statement {
+public:
 
+    LET(std::string current_line);
+
+    ~LET();
+
+    void execute(EvalState &state, Program &Program);
+
+};
+
+class PRINT: public Statement {
+public:
+
+    PRINT(std::string current_line);
+
+    ~PRINT();
+
+    void execute(EvalState &state, Program &Program);
+
+};
+
+class INPUT: public Statement {
+public:
+    INPUT(std::string current_line);
+
+    ~INPUT();
+
+    void execute(EvalState &state, Program &program);
+};
+
+class IF: public Statement {
+public:
+    IF(std::string current_line);
+
+    ~IF();
+
+    void execute(EvalState &state, Program &program);
+
+    int calculate(EvalState &state, std::string expr);
+
+    int next_line_number;
+};
+
+class GOTO: public Statement {
+public:
+    GOTO(std::string current_line);
+
+    ~GOTO();
+
+    void execute(EvalState &state, Program &program);
+
+    int next_line_number;
+};
 /*
  * The remainder of this file must consists of subclass
  * definitions for the individual statement forms.  Each of
