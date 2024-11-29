@@ -47,19 +47,6 @@ std::string Program::getSourceLine(int lineNumber) {
     //todo
 }
 
-void Program::setParsedStatement(int lineNumber, Statement *stmt) {
-    
-    // Replace this stub with your own code
-    //todo
-}
-
-//void Program::removeSourceLine(int lineNumber) {
-
-Statement *Program::getParsedStatement(int lineNumber) {
-   // Replace this stub with your own code
-   //todo
-}
-
 int Program::getFirstLineNumber() {
     // Replace this stub with your own code
     if (line_number.size() == 0) {
@@ -80,6 +67,12 @@ int Program::getNextLineNumber(int lineNumber) {
     //todo
 }
 
+bool Program::find_line_number(int number) {
+    if (line_number.find(number) != line_number.end()) {
+        return true;
+    }
+    return false;
+}
 //more func to add
 //todo
 
