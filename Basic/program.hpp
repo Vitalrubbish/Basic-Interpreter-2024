@@ -72,7 +72,7 @@ public:
  * program in the correct sequence.
  */
 
-    void addSourceLine(int lineNumber, const std::string& line);
+    void addSourceLine(int lineNumber, const std::string& line, const std::string &original_line);
 
 /*
  * Method: removeSourceLine
@@ -141,11 +141,14 @@ public:
     int getNextLineNumber(int lineNumber);
 
     bool find_line_number(int number);
+
+    std::string getOriginalLine(int lineNumber);
     //more func to add
     //todo
 
 private:
     std::map<int, std::string> sentence;
+    std::map<int, std::string> original;
     std::set<int> line_number;
     // Fill this in with whatever types and instance variables you need
     //todo
