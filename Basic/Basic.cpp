@@ -140,6 +140,7 @@ void processLine(std::string line, Program &program, EvalState &state) {
     scanner.setInput(line);
     std::string token;
     TokenType type;
+    std::map<int,std::string> original;
 
     token = scanner.nextToken();
     type = scanner.getTokenType(token);
@@ -167,7 +168,7 @@ void processLine(std::string line, Program &program, EvalState &state) {
         if (token == "LIST") {
             int line_number = program.getFirstLineNumber();
             while (line_number != -1) {
-                std::cout << program.getSourceLine(line_number) << '\n';
+                std::cout << program.getOriginalLine(line_number) << '\n';
                 line_number = program.getNextLineNumber(line_number);
             }
         }
@@ -219,6 +220,7 @@ void processLine(std::string line, Program &program, EvalState &state) {
     }
     else if (type == NUMBER) {
         int line_id = std::stoi(token);
+        std::string original_line = line;
         if (!scanner.hasMoreTokens()) {
             program.removeSourceLine(line_id);
             return;
@@ -236,7 +238,7 @@ void processLine(std::string line, Program &program, EvalState &state) {
             std::string tmp_line = standardize_if(line);
             line = tmp_line;
         }
-        program.addSourceLine(line_id, line);
+        program.addSourceLine(line_id, line, original_line);
     }
     //todo
 }
