@@ -23,10 +23,11 @@ void Program::clear() {
     //todo
 }
 
-void Program::addSourceLine(int lineNumber, const std::string &line) {
+void Program::addSourceLine(int lineNumber, const std::string &line, const std::string &original_line) {
     // Replace this stub with your own code
     //todo
     sentence[lineNumber] = line;
+    original[lineNumber] = original_line;
     if (line_number.find(lineNumber) == line_number.end()){
         line_number.insert(lineNumber);
     }
@@ -72,6 +73,10 @@ bool Program::find_line_number(int number) {
         return true;
     }
     return false;
+}
+
+std::string Program::getOriginalLine(int lineNumber) {
+    return original[lineNumber];
 }
 //more func to add
 //todo
