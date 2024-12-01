@@ -332,4 +332,4 @@ int范围。不支持浮点数。输入浮点数也是不合法的。
 未定义行为。处理同上。此外，手册上要求加空格的地方必须加空格，否则也是未定义行为。
 
 ### 变量命名规范？
-必须由一个或多个数字、大小写字母、下划线组成，且不能是关键字（REM，LET，PRINT，INPUT，END，GOTO，IF，THEN，RUN，LIST，CLEAR，QUIT，HELP）。出现其他字符是未定义行为。
+必须由一个或多个数字、大小写字母、下划线组成，且不能是关键字（REM，LET，PRINT，INPUT，END，GOTO，IF，THEN，RUN，LIST，CLEAR，QUIT，HELP）。出现其他字符是未定义行为。变量名包含关键字也被视为是未定义行为。
