@@ -104,7 +104,7 @@ CompoundExp::~CompoundExp() {
 int CompoundExp::eval(EvalState &state) {
     if (op == "=") {
         if (lhs->getType() != IDENTIFIER) {
-            error("Illegal variable in assignment");
+            error("SYNTAX ERROR");
         }
         if (lhs->getType() == IDENTIFIER && lhs->toString() == "LET")
             error("SYNTAX ERROR");
