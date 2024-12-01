@@ -16,7 +16,7 @@
 Expression *parseExp(TokenScanner &scanner) {
     Expression *exp = readE(scanner);
     if (scanner.hasMoreTokens()) {
-        error("parseExp: Found extra token: " + scanner.nextToken());
+        error("SYNTAX ERROR");
     }
     return exp;
 }
@@ -59,10 +59,10 @@ Expression *readT(TokenScanner &scanner) {
     if (type == WORD) return new IdentifierExp(token);
     if (type == NUMBER) return new ConstantExp(stringToInteger(token));
     if (token == "-") return new CompoundExp(token, new ConstantExp(0), readE(scanner));
-    if (token != "(") error("Illegal term in expression");
+    if (token != "(") error("SYNTAX ERROR");
     Expression *exp = readE(scanner);
     if (scanner.nextToken() != ")") {
-        error("Unbalanced parentheses in expression");
+        error("SYNTAX ERROR");
     }
     return exp;
 }
