@@ -163,15 +163,14 @@ void standardize_goto(std::string original_line) {
     while (original_line.substr(p - 4, 4) != "GOTO"){
         p++;
     }
-    p++;
     while (original_line[p] == ' ') {
         p++;
     }
-    p++;
     while (p < original_line.size()) {
         if (!isdigit(original_line[p])) {
             error("SYNTAX ERROR");
         }
+        p++;
     }
 }
 
@@ -180,7 +179,6 @@ void standardize_end(std::string original_line) {
     while (original_line.substr(p - 3, 3) != "END"){
         p++;
     }
-    p++;
     if (p != original_line.size()) {
         error("SYNTAX ERROR");
     }
