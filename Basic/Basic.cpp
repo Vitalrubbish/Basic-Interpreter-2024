@@ -52,6 +52,21 @@ int main() {
  */
 
 std::string standardize_print(std::string original_line) {
+    int bracket = 0;
+    for (int i = 0; i < original_line.size(); i++) {
+        if (original_line[i] == '(') {
+            bracket++;
+        }
+        if (original_line[i] == ')') {
+            bracket--;
+            if (bracket < 0) {
+                error("SYNTAX ERROR");
+            }
+        }
+    }
+    if (bracket) {
+        error("SYNTAX ERROR");
+    }
     int p = 4;
     while (original_line.substr(p - 4, 5) != "PRINT") {
         p++;
@@ -62,6 +77,9 @@ std::string standardize_print(std::string original_line) {
     }
     int cur = p;
     while (p < original_line.length()) {
+        if (original_line[p] == '=') {
+            error("SYNTAX ERROR");
+        }
         if (original_line[p] != ' ') {
             original_line[cur] = original_line[p];
             cur++;
@@ -98,16 +116,21 @@ std::string standardize_if(std::string original_line) {
         p++;
     }
     p++;
+    int cur = p;
     while (original_line[p] == ' ') {
         p++;
     }
-    int cur = p;
-    while (original_line.substr(p,2) != " =" && original_line.substr(p,2) != " <" && original_line.substr(p,2) != " >") {
+    original_line[cur] = ' ';
+    cur++;
+    while (p < original_line.size() - 1 && original_line.substr(p,2) != " =" && original_line.substr(p,2) != " <" && original_line.substr(p,2) != " >") {
         if (original_line[p] != ' ') {
             original_line[cur] = original_line[p];
             cur++;
         }
         p++;
+    }
+    if (p == original_line.size() - 1) {
+        error("SYNTAX ERROR");
     }
 
     original_line[cur++] = original_line[p++];
@@ -120,6 +143,9 @@ std::string standardize_if(std::string original_line) {
 
     while (original_line.substr(p,5) != " THEN") {
         if (original_line[p] != ' ') {
+            if (original_line[p] == '>' || original_line[p] == '=' || original_line[p] == '<') {
+                error("SYNTAX ERROR");
+            }
             original_line[cur] = original_line[p];
             cur++;
         }
@@ -132,6 +158,34 @@ std::string standardize_if(std::string original_line) {
 
     return original_line.substr(0, cur);
 }
+void standardize_goto(std::string original_line) {
+    int p = 4;
+    while (original_line.substr(p - 4, 4) != "GOTO"){
+        p++;
+    }
+    p++;
+    while (original_line[p] == ' ') {
+        p++;
+    }
+    p++;
+    while (p < original_line.size()) {
+        if (!isdigit(original_line[p])) {
+            error("SYNTAX ERROR");
+        }
+    }
+}
+
+void standardize_end(std::string original_line) {
+    int p = 3;
+    while (original_line.substr(p - 3, 3) != "END"){
+        p++;
+    }
+    p++;
+    if (p != original_line.size()) {
+        error("SYNTAX ERROR");
+    }
+}
+
 
 void processLine(std::string line, Program &program, EvalState &state) {
     TokenScanner scanner;
@@ -140,7 +194,6 @@ void processLine(std::string line, Program &program, EvalState &state) {
     scanner.setInput(line);
     std::string token;
     TokenType type;
-    std::map<int,std::string> original;
 
     token = scanner.nextToken();
     type = scanner.getTokenType(token);
@@ -150,29 +203,41 @@ void processLine(std::string line, Program &program, EvalState &state) {
             line = tmp_line;
             PRINT(line).execute(state, program);
         }
-        if (token == "LET") {
+        else if (token == "LET") {
             std::string tmp_line = standardize_let(line);
             line = tmp_line;
             LET(line).execute(state, program);
         }
-        if (token == "INPUT") {
+        else if (token == "INPUT") {
             INPUT(line).execute(state, program);
         }
-        if (token == "QUIT") {
+        else if (token == "QUIT") {
+            if (line.size() != 4) {
+                error("SYNTAX ERROR");
+            }
             exit(0);
         }
-        if (token == "CLEAR") {
+        else if (token == "CLEAR") {
+            if (line.size() != 5) {
+                error("SYNTAX ERROR");
+            }
             program.clear();
             state.Clear();
         }
-        if (token == "LIST") {
+        else if (token == "LIST") {
+            if (line.size() != 4) {
+                error("SYNTAX ERROR");
+            }
             int line_number = program.getFirstLineNumber();
             while (line_number != -1) {
                 std::cout << program.getOriginalLine(line_number) << '\n';
                 line_number = program.getNextLineNumber(line_number);
             }
         }
-        if (token == "RUN") {
+        else if (token == "RUN") {
+            if (line.size() != 3) {
+                error("SYNTAX ERROR");
+            }
             int line_number = program.getFirstLineNumber();
             while(true) {
                 if (line_number == -1) {
@@ -217,6 +282,9 @@ void processLine(std::string line, Program &program, EvalState &state) {
                 }
             }
         }
+        else if (token != "REM") {
+            error("SYNTAX ERROR");
+        }
     }
     else if (type == NUMBER) {
         int line_id = std::stoi(token);
@@ -230,13 +298,22 @@ void processLine(std::string line, Program &program, EvalState &state) {
             std::string tmp_line = standardize_print(line);
             line = tmp_line;
         }
-        if (token == "LET") {
+        else if (token == "LET") {
             std::string tmp_line = standardize_let(line);
             line = tmp_line;
         }
-        if (token == "IF") {
+        else if (token == "IF") {
             std::string tmp_line = standardize_if(line);
             line = tmp_line;
+        }
+        else if (token == "GOTO") {
+            standardize_goto(line);
+        }
+        else if (token == "END") {
+            standardize_end(line);
+        }
+        else if (token != "REM"  && token != "INPUT") {
+            error("SYNTAX ERROR");
         }
         program.addSourceLine(line_id, line, original_line);
     }
