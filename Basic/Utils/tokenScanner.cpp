@@ -127,6 +127,7 @@ void TokenScanner::saveToken(std::string token) {
     cp->str = token;
     cp->link = savedTokens;
     savedTokens = cp;
+    StringCell *cur = savedTokens;
 }
 
 void TokenScanner::ignoreWhitespace() {
@@ -183,7 +184,17 @@ TokenType TokenScanner::getTokenType(std::string token) const {
     char ch = token[0];
     if (isspace(ch)) return SEPARATOR;
     if (ch == '"' || (ch == '\'' && token.length() > 1)) return STRING;
-    if (isdigit(ch)) return NUMBER;
+    /*if (isdigit(ch)) return NUMBER;*/
+    bool flag = true;
+    for (int i = 0; i < token.size(); i++) {
+        if (!isdigit(token[i])) {
+            flag = false;
+            break;
+        }
+    }
+    if (flag) {
+        return NUMBER;
+    }
     if (isWordCharacter(ch)) return WORD;
     return OPERATOR;
 };
@@ -446,3 +457,4 @@ bool TokenScanner::isOperatorPrefix(std::string op) {
     }
     return false;
 }
+
